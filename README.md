@@ -33,3 +33,19 @@ The signal of this connector is based on Grove connector (I2C), so that many kin
 
 Now we are developing 6-mechanical-keys-dock for application dedicated controller. (For example, send keyevents specialized for Illustrator, Fusion360, etc.)
 
+![6-mechanical-keys-dock](image/btms_dock.png)
+
+## Resources
+In this repository there are 3 folders so far.
+
+- hardware<br>
+KiCad Design files and schematic in pdf.
+- software<br>
+Main sourcecode witten in Python(Circuit Python)
+
+Later we'll add 3D Modeling data that could be print out with 3D Printer.
+
+We'll write step-by-step instruction guide later.
+
+![pcbs](image/pcb.jpg)
+This PCB is created with Seeed FusionPCB!
