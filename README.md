@@ -48,4 +48,4 @@ Later we'll add 3D Modeling data that could be print out with 3D Printer.
 We'll write step-by-step instruction guide later.
 
 ![pcbs](image/pcb.jpg)
-This PCB is created with Seeed FusionPCB!
+This PCBs are created with Seeed FusionPCB!
