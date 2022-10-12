@@ -50,6 +50,10 @@ We'll write step-by-step instruction guide later.
 ![pcbs](image/pcb.jpg)
 This PCBs are created with Seeed FusionPCB!
 
+![pcbs](image/btms_pcba_a.jpg)
+![pcbs](image/btms_pcba_b.jpg)
+
+
 ## Links
 
 1) Seeed XIAO RP2040: https://www.seeedstudio.com/XIAO-RP2040-v1-0-p-5026.html
