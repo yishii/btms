@@ -9,7 +9,7 @@ With this item, we can get back to online meeting right away even though we're d
 
 For details, plase watch the video below!
 
-[!['Video'](image/video_thumbnail.png)](https://www.youtube.com/watch?v=jDHEo-fj3_8)
+[!['Video'](image/video_thumbnail.png)](https://youtu.be/crL1nfsBAuw)
 
 ## The mechanism
 
