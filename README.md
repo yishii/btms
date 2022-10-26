@@ -6,6 +6,7 @@
 Sometimes happen that attending to the online meeting that roughly just listen to. 
 
 But, if suddenly asked some comment unexpectedly, then in panic and cannot back to the meeting right away quickly.
+This  is the chance for do editing excel or powerpoints.
 
 That's why we developed Back To the Meeting Switch(BTMS) for this solution.
 
