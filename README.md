@@ -2,6 +2,18 @@
 
 ![BTMS](image/unit.png)
 
+## Back Story
+Sometimes happen that attending to the online meeting that roughly just listen to. 
+
+But, if suddenly asked some comment unexpectedly, then in panic and cannot back to the meeting right away quickly.
+
+That's why we developed Back To the Meeting Switch(BTMS) for this solution.
+
+With the BTMS, you can turn the knob to select the backgrounded online meeting window, then press the knob the meeting windows comes to the forefront, and at the same time, the MIC mute turns off. And just you do is answer with relax.
+
+So, ~~do another job~~ attend the meeting in peace.
+
+
 ## What is BTMS?
 
 BTMS (Back To the Meeting Switch) is a kind of human interface device that using Seeeduino Xiao (SAMD or RP2040).
