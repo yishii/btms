@@ -71,3 +71,12 @@ This PCBs are created with Seeed FusionPCB!!
 1) Seeed XIAO RP2040: https://www.seeedstudio.com/XIAO-RP2040-v1-0-p-5026.html
 2) Seeed Fusion PCBA Service: https://www.seeedstudio.com/pcb-assembly.html
 3) Seeed Fusion DIY XIAO Mechanical Keyboard Contest: https://www.seeedstudio.com/seeed-fusion-diy-xiao-mechanical-keyboard-contest.html
+
+## Developers
+yishii Twitter : https://twitter.com/yishii
+
+dabyoonig Twitter  : https://twitter.com/dabyoong
+
+
+
+
