@@ -2,7 +2,7 @@
 
 ![BTMS](image/unit.png)
 
-![In English is here](README.md)
+[[In English is here]](README.md)
 
 ## 背景ストーリー
 聞いているだけでいいと思っていたオンライン会議、急にコメントを求められると、焦ってしまってすぐに戻ることができません。
