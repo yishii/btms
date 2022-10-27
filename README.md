@@ -2,6 +2,8 @@
 
 ![BTMS](image/unit.png)
 
+![日本語版はこちら](README_ja.md)
+
 ## Back Story
 Sometimes happen that attending to the online meeting that roughly just listen to. 
 This  is the chance for do editing excel or powerpoints.
