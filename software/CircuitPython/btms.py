@@ -1,8 +1,8 @@
 #
 # BTMS for CircuitPython
 #
-# with Seeeduino Xiao, use Seeeduino XIAO - Keyboard Optimized
-#  https://circuitpython.org/board/seeeduino_xiao_kb/
+# with Seeeduino Xiao RP2040, use this below;
+#  https://circuitpython.org/board/seeeduino_xiao_rp2040/
 
 from board import *
 import rotaryio
@@ -12,19 +12,29 @@ import usb_hid
 from adafruit_hid.keyboard import Keyboard
 from adafruit_hid.keycode import Keycode
 from neopixel import *
+import busio
+
 
 PIN_A = D7
 PIN_B = D8
-# PIN_CENTER_PUSH = D2
-PIN_CENTER_PUSH = D0
-# PIN_NEOPIXEL = D6
-PIN_NEOPIXEL = D10
+# PIN_CENTER_PUSH = D2 # for Xiao(SAMD)
+PIN_CENTER_PUSH = D0   # for Xiao(RP2040)
+# PIN_NEOPIXEL = D6    # for Xiao(SAMD)
+PIN_NEOPIXEL = D10     # for Xiao(RP2040)
 PIN_TACTILE_SW = D3
+
+PIN_I2C_SCL = D5
+PIN_I2C_SDA = D4
+
+I2C_SLAVE_ADDRESS_6BUTTON_KEYDOCK = 0x48
 
 LED_INDICATOR_CHANGE_ONLINE_APPLICATION = 1
 LED_INDICATOR_TOGGLE_MUTE_MODE = 2
 LED_INDICATOR_SHOW_CURRENT_ONLINE_APPLICATION = 3
 LED_INDICATOR_OFF = 100
+
+DOCK_NONE = 0
+DOCK_6KEYS = 1
 
 MODE_NORMAL = 0
 MODE_WINDOW_CHANGE = 1
@@ -237,7 +247,6 @@ def on_side_short_press():
     if current_mode == MODE_NORMAL:
         led_indicate(LED_INDICATOR_SHOW_CURRENT_ONLINE_APPLICATION)
 
-
 def on_side_long_press():
     global current_mode
     print('3')
@@ -246,7 +255,114 @@ def on_side_long_press():
         save_led_color()
         led_indicate(LED_INDICATOR_CHANGE_ONLINE_APPLICATION)
 
+def on_attach_dock(dock_type):
+    print('New dock :' + str(dock_type))
+    if dock_type == DOCK_6KEYS:
+        print('Initialize for 6KEYS DOCK')
+        dock6keys.initialize()
+
+attached_dock_type = DOCK_NONE
+last_checked_dock_time = 0
+
+def manage_dock():
+    global last_checked_dock_time, attached_dock_type
+    if (time.monotonic() > last_checked_dock_time + 1):
+        try:
+            detected_slave_address = i2c.scan().pop()
+            if(detected_slave_address == I2C_SLAVE_ADDRESS_6BUTTON_KEYDOCK):
+                detected_dock = DOCK_6KEYS
+            else:
+                detected_dock = DOCK_NONE
+            if(detected_dock != attached_dock_type):
+                attached_dock_type = detected_dock
+                on_attach_dock(attached_dock_type)
+            last_checked_dock_time = time.monotonic()
+        except IndexError:
+            detected_dock = DOCK_NONE
+
+class Dock6Keys:
+    on_key_press = None
+    last_pressed = 0x00
+
+    def __init__(self, key1, key2, key3, key4, key5, key6):
+        self.on_key_press = []
+        self.on_key_press += [key1]
+        self.on_key_press += [key2]
+        self.on_key_press += [key3]
+        self.on_key_press += [key4]
+        self.on_key_press += [key5]
+        self.on_key_press += [key6]
+
+    def initialize(self):
+        for led in range(6):
+            self.set_led(led, (0, 0, 0))
+    
+    def set_led(self, led_no, rgb):
+        if(led_no < 6):
+            i2c.writeto(I2C_SLAVE_ADDRESS_6BUTTON_KEYDOCK, bytes([led_no, rgb[0], rgb[1], rgb[2]]))
+    
+    def poll(self):
+        receive_data = bytearray(1)
+        i2c.readfrom_into(I2C_SLAVE_ADDRESS_6BUTTON_KEYDOCK, receive_data)
+        pressed = receive_data[0]
+        pressed_differs = pressed ^ self.last_pressed
+        for key in range(6):
+            mask_bit = 1 << key
+            if(pressed_differs & mask_bit):
+                if (pressed & mask_bit == mask_bit):
+                    self.on_key_press[key](True)
+                else:
+                    self.on_key_press[key](False)
+        self.last_pressed = pressed
+
+def on_dock6_key1_press(pressed):
+    if pressed:
+        dock6keys.set_led(0, (255, 255, 255))
+    else:
+        dock6keys.set_led(0, (0, 0, 0))
+    print(pressed)
+
+def on_dock6_key2_press(pressed):
+    if pressed:
+        dock6keys.set_led(1, (255, 255, 255))
+    else:
+        dock6keys.set_led(1, (0, 0, 0))
+    print(pressed)
+
+def on_dock6_key3_press(pressed):
+    if pressed:
+        dock6keys.set_led(2, (255, 255, 255))
+    else:
+        dock6keys.set_led(2, (0, 0, 0))
+    print(pressed)
+
+def on_dock6_key4_press(pressed):
+    if pressed:
+        dock6keys.set_led(3, (255, 255, 255))
+    else:
+        dock6keys.set_led(3, (0, 0, 0))
+    print(pressed)
+
+def on_dock6_key5_press(pressed):
+    if pressed:
+        dock6keys.set_led(4, (255, 255, 255))
+    else:
+        dock6keys.set_led(4, (0, 0, 0))
+    print(pressed)
+
+def on_dock6_key6_press(pressed):
+    if pressed:
+        dock6keys.set_led(5, (255, 255, 255))
+    else:
+        dock6keys.set_led(5, (0, 0, 0))
+    print(pressed)
+
 if __name__ == "__main__":
+    i2c = busio.I2C(PIN_I2C_SCL, PIN_I2C_SDA, frequency=100000)
+
+    while not i2c.try_lock():
+        pass
+
     kbd = Keyboard(usb_hid.devices)
     # エンコーダー・スイッチ類の初期設定
     encoder = rotaryio.IncrementalEncoder(PIN_A, PIN_B)
@@ -265,13 +381,18 @@ if __name__ == "__main__":
     # オンラインアプリケーションの初期化
     appcontrol = ApplicationControl()
     
+    # 6Keys Dockの初期化
+    dock6keys = Dock6Keys(on_dock6_key1_press, on_dock6_key2_press, on_dock6_key3_press, on_dock6_key4_press, on_dock6_key5_press, on_dock6_key6_press)
+    
     # NeoPixelの初期設定
     led = NeoPixel(PIN_NEOPIXEL, 1, brightness=1.0)
     led_indicate(LED_INDICATOR_TOGGLE_MUTE_MODE)
+    
     while True:
         manage_knob()
-        # switch_mute_state()
         manage_led()
+        manage_dock()
         center_button.poll()
         side_button.poll()
-
+        if (attached_dock_type == DOCK_6KEYS):
+            dock6keys.poll()
