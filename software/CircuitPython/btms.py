@@ -83,7 +83,7 @@ class ApplicationControl:
     ZOOM = 2
     current_application = TEAMS
     max_application_type = 3
-    application_colors = [ (0, 150, 0), (0, 150, 150), (100, 150, 0) ]
+    application_colors = [ (0, 0, 255), (50, 0, 255), (0, 150, 255) ]
     def __init__(self):
         pass
     
@@ -193,9 +193,9 @@ def led_indicate(mode):
 
     if mode == LED_INDICATOR_TOGGLE_MUTE_MODE:
         if mute_state:
-            set_led_color((0, 100, 255))
+            set_led_color((255, 255, 0))
         else:
-            set_led_color((100, 0, 255))
+            set_led_color((255, 100, 0))
         mute_state = False if mute_state else True
     elif mode == LED_INDICATOR_SHOW_CURRENT_ONLINE_APPLICATION:
         save_led_color()
