@@ -19,7 +19,6 @@ uint8_t pressedKeys = 0x00;
 void requestEvent()
 {
   Wire.write(pressedKeys);
-  pressedKeys = 0x00;
 }
 
 void receiveEvent(int len)
@@ -91,10 +90,10 @@ void boot_indicator(void)
 }
 
 void setup() {
-  Serial.begin(57600);
+  Serial.begin(115200);
   Serial.println("resetting");
-  FastLED.addLeds<WS2812, DATA_PIN, RGB>(leds, NUM_LEDS);
-  FastLED.setBrightness(84);
+  FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, NUM_LEDS);
+  FastLED.setBrightness(100);
   int i;
   boot_indicator();
   for (i = 0; i < 6; i++)
@@ -110,20 +109,37 @@ void setup() {
 
 void loop()
 {
+  static int cnt = 0;
   int i;
-  noInterrupts();
+  uint8_t pressed;
+  static uint8_t pressed_last;
+  pressed = 0;
+  for (i = 0; i < 6; i++)
   {
-    for (i = 0; i < 6; i++)
-    {
-      if (digitalRead(SW_LUT[i]) == LOW) {
-        pressedKeys |= (1 << i);
-      }
+    if (digitalRead(SW_LUT[i]) == LOW) {
+      pressed |= (1 << i);
     }
   }
-  interrupts();
+  if (pressed == pressed_last)
+  {
+    cnt++;
+    if (cnt > 3) {
+      noInterrupts();
+      {
+        pressedKeys = pressed;
+      }
+      interrupts();
+      cnt = 0;
+    }
+  } else {
+    cnt = 0;
+  }
+  pressed_last = pressed;
+  Serial.println(pressedKeys, BIN);
 
   if (updateLed)
   {
     FastLED.show();
   }
+  delay(1);
 }

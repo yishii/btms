@@ -315,47 +315,64 @@ class Dock6Keys:
                     self.on_key_press[key](False)
         self.last_pressed = pressed
 
+fn_pressed = False
 def on_dock6_key1_press(pressed):
     if pressed:
         dock6keys.set_led(0, (255, 255, 255))
+        if fn_pressed:
+            kbd.send(Keycode.A)
+        else:
+            kbd.send(Keycode.F)
     else:
         dock6keys.set_led(0, (0, 0, 0))
-    print(pressed)
 
 def on_dock6_key2_press(pressed):
     if pressed:
         dock6keys.set_led(1, (255, 255, 255))
+        if fn_pressed:
+            kbd.send(Keycode.B)
+        else:
+            kbd.send(Keycode.G)
     else:
         dock6keys.set_led(1, (0, 0, 0))
-    print(pressed)
 
 def on_dock6_key3_press(pressed):
     if pressed:
         dock6keys.set_led(2, (255, 255, 255))
+        if fn_pressed:
+            kbd.send(Keycode.C)
+        else:
+            kbd.send(Keycode.H)
     else:
         dock6keys.set_led(2, (0, 0, 0))
-    print(pressed)
 
 def on_dock6_key4_press(pressed):
     if pressed:
         dock6keys.set_led(3, (255, 255, 255))
+        if fn_pressed:
+            kbd.send(Keycode.D)
+        else:
+            kbd.send(Keycode.I)
     else:
         dock6keys.set_led(3, (0, 0, 0))
-    print(pressed)
 
 def on_dock6_key5_press(pressed):
     if pressed:
         dock6keys.set_led(4, (255, 255, 255))
+        fn_pressed = True
     else:
         dock6keys.set_led(4, (0, 0, 0))
-    print(pressed)
+        fn_pressed = False
 
 def on_dock6_key6_press(pressed):
     if pressed:
         dock6keys.set_led(5, (255, 255, 255))
+        if fn_pressed:
+            kbd.send(Keycode.E)
+        else:
+            kbd.send(Keycode.J)
     else:
         dock6keys.set_led(5, (0, 0, 0))
-    print(pressed)
 
 if __name__ == "__main__":
     i2c = busio.I2C(PIN_I2C_SCL, PIN_I2C_SDA, frequency=100000)

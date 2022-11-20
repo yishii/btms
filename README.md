@@ -2,6 +2,21 @@
 
 ![BTMS](image/unit.png)
 
+[[日本語版はこちら]](README_ja.md)
+
+## Back Story
+Sometimes happen that attending to the online meeting that roughly just listen to. 
+This  is the chance for do editing excel or powerpoints.
+
+But, if suddenly asked some comment unexpectedly, then in panic and cannot back to the meeting right away quickly.
+
+That's why we developed Back To the Meeting Switch(BTMS) for this solution.
+
+With the BTMS, you can turn the knob to select the backgrounded online meeting window, then press the knob the meeting windows comes to the forefront, and at the same time, the MIC mute turns off. And just you do is answer with relax.
+
+So, ~~do another job~~ attend the meeting in peace.
+
+
 ## What is BTMS?
 
 BTMS (Back To the Meeting Switch) is a kind of human interface device that using Seeeduino Xiao (SAMD or RP2040).
@@ -59,3 +74,12 @@ This PCBs are created with Seeed FusionPCB!!
 1) Seeed XIAO RP2040: https://www.seeedstudio.com/XIAO-RP2040-v1-0-p-5026.html
 2) Seeed Fusion PCBA Service: https://www.seeedstudio.com/pcb-assembly.html
 3) Seeed Fusion DIY XIAO Mechanical Keyboard Contest: https://www.seeedstudio.com/seeed-fusion-diy-xiao-mechanical-keyboard-contest.html
+
+## Developers
+yishii Twitter : https://twitter.com/yishii
+
+dabyoonig Twitter  : https://twitter.com/dabyoong
+
+
+
+
