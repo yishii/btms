@@ -13,7 +13,9 @@ from adafruit_hid.keyboard import Keyboard
 from adafruit_hid.keycode import Keycode
 from neopixel import *
 import busio
-
+import usb_cdc
+import re
+import layers_conf
 
 PIN_A = D7
 PIN_B = D8
@@ -42,9 +44,12 @@ MODE_CHANGE_ONLINE_APPLICATION = 2
 
 current_mode = MODE_NORMAL
 
+host_managed_mode = False
+btms = {}
+
 class Button:
     gpio = None
-    checked_time_last = 0
+    checked_time_last = 1
     pushed_time = 0
     pushed_value_last = True
     on_press_short = None
@@ -77,36 +82,46 @@ class Button:
                 self.pushed_time = 0
             self.pushed_value_last = gpio_value
 
-class ApplicationControl:
-    LINE = 0
-    TEAMS = 1
-    ZOOM = 2
-    current_application = TEAMS
-    max_application_type = 3
-    application_colors = [ (0, 0, 255), (50, 0, 255), (0, 150, 255) ]
+class Layer:
+    active_layer_no = 0
+    max_application_type = 0
+    layers = []
+    active_layer = None
+
     def __init__(self):
-        pass
-    
+        for layer in layers_conf.layers:
+            m = __import__(layer)
+            m_class = getattr(m, layer)
+            m_instance = m_class(btms)
+            self.layers += [m_instance]
+            self.max_application_type += 1
+            print(f'imported module {layer} [{m_instance.target}]')
+        self.active_layer = self.layers[self.active_layer_no]
+
     def get_color(self):
-        return self.application_colors[self.current_application]
+        return self.active_layer.color
+    
+    def get_target(self):
+        return self.active_layer.target
     
     def set_next(self):
-        self.current_application = (self.current_application + 1) % self.max_application_type
+        self.active_layer_no = (self.active_layer_no + 1) % self.max_application_type
+        self.active_layer = self.layers[self.active_layer_no]
+        print(f'Layer changed to {self.active_layer.target}')
 
     def set_prev(self):
-        self.current_application = (self.current_application - 1) % self.max_application_type
+        self.active_layer_no = (self.active_layer_no - 1) % self.max_application_type
+        self.active_layer = self.layers[self.active_layer_no]
+        print(f'Layer changed to {self.active_layer.target}')
 
-    #def mute(self):
-    #    pass
+    def mute(self):
+        self.active_layer.mute()
     
-    #def unmute(self):
-    #    pass
+    def unmute(self):
+        self.active_layer.unmute()
     
     def leave(self):
-        kbd.press(Keycode.LEFT_CONTROL);
-        kbd.press(Keycode.LEFT_SHIFT);
-        kbd.press(Keycode.H);
-        kbd.release_all()
+        self.active_layer.leave()
 
 def on_rotate(cw):
     global current_mode, blink_color
@@ -128,11 +143,11 @@ def on_rotate(cw):
             kbd.release(Keycode.TAB)
     elif current_mode == MODE_CHANGE_ONLINE_APPLICATION:
         if cw:
-            appcontrol.set_next()
-            blink_color = appcontrol.get_color()
+            layers.set_next()
+            blink_color = layers.get_color()
         else:
-            appcontrol.set_prev()
-            blink_color = appcontrol.get_color()
+            layers.set_prev()
+            blink_color = layers.get_color()
 
 rotate_state = 0
 last_position = None
@@ -149,11 +164,14 @@ def manage_knob():
             on_rotate(False)
     last_position = position
 
+internal_mute_state = False
 def switch_mute_state():
-    kbd.press(Keycode.LEFT_CONTROL);
-    kbd.press(Keycode.LEFT_SHIFT);
-    kbd.press(Keycode.M);
-    kbd.release_all()
+    global internal_mute_state
+    if internal_mute_state is True:
+        layers.mute()
+    else:
+        layers.unmute()
+    internal_mute_state = True if not internal_mute_state else False
     led_indicate(LED_INDICATOR_TOGGLE_MUTE_MODE)
 
 current_led_color = None
@@ -186,7 +204,7 @@ def led_indicate(mode):
 
     if mode == LED_INDICATOR_CHANGE_ONLINE_APPLICATION:
         blink_interval = 0.1
-        blink_color = appcontrol.get_color()
+        blink_color = layers.get_color()
         enable_blink = True
     else:
         enable_blink = False
@@ -200,8 +218,7 @@ def led_indicate(mode):
     elif mode == LED_INDICATOR_SHOW_CURRENT_ONLINE_APPLICATION:
         save_led_color()
         for _ in range(2):
-            # set_led_color(application_colors[current_application])
-            set_led_color(appcontrol.get_color())
+            set_led_color(layers.get_color())
             time.sleep(0.5)
             set_led_color((0, 0, 0))
             time.sleep(0.5)
@@ -223,22 +240,26 @@ def manage_led():
 
 def on_center_short_press():
     global current_mode
-    print('1')
     if current_mode == MODE_NORMAL:
-        switch_mute_state()
+        if host_managed_mode:
+            # print('center_short_press')
+            usb_cdc.console.write(b'center_short_press\r\n')
+        else:
+            switch_mute_state()
     elif current_mode == MODE_CHANGE_ONLINE_APPLICATION:
         led_indicate(LED_INDICATOR_SHOW_CURRENT_ONLINE_APPLICATION)
         current_mode = MODE_NORMAL
     elif current_mode == MODE_WINDOW_CHANGE:
         kbd.release(Keycode.LEFT_ALT);
-        switch_mute_state()
+        if host_managed_mode is not True:
+            switch_mute_state()
         current_mode = MODE_NORMAL
 
 def on_center_long_press():
     global current_mode
     print('4')
     if current_mode == MODE_NORMAL:
-        appcontrol.leave()
+        layers.leave()
 
 
 def on_side_short_press():
@@ -315,47 +336,89 @@ class Dock6Keys:
                     self.on_key_press[key](False)
         self.last_pressed = pressed
 
+fn_pressed = False
 def on_dock6_key1_press(pressed):
     if pressed:
         dock6keys.set_led(0, (255, 255, 255))
+        if fn_pressed:
+            kbd.send(Keycode.A)
+        else:
+            kbd.send(Keycode.F)
     else:
         dock6keys.set_led(0, (0, 0, 0))
-    print(pressed)
 
 def on_dock6_key2_press(pressed):
     if pressed:
         dock6keys.set_led(1, (255, 255, 255))
+        if fn_pressed:
+            kbd.send(Keycode.B)
+        else:
+            kbd.send(Keycode.G)
     else:
         dock6keys.set_led(1, (0, 0, 0))
-    print(pressed)
 
 def on_dock6_key3_press(pressed):
     if pressed:
         dock6keys.set_led(2, (255, 255, 255))
+        if fn_pressed:
+            kbd.send(Keycode.C)
+        else:
+            kbd.send(Keycode.H)
     else:
         dock6keys.set_led(2, (0, 0, 0))
-    print(pressed)
 
 def on_dock6_key4_press(pressed):
     if pressed:
         dock6keys.set_led(3, (255, 255, 255))
+        if fn_pressed:
+            kbd.send(Keycode.D)
+        else:
+            kbd.send(Keycode.I)
     else:
         dock6keys.set_led(3, (0, 0, 0))
-    print(pressed)
 
 def on_dock6_key5_press(pressed):
     if pressed:
         dock6keys.set_led(4, (255, 255, 255))
+        fn_pressed = True
     else:
         dock6keys.set_led(4, (0, 0, 0))
-    print(pressed)
+        fn_pressed = False
 
 def on_dock6_key6_press(pressed):
     if pressed:
         dock6keys.set_led(5, (255, 255, 255))
+        if fn_pressed:
+            kbd.send(Keycode.E)
+        else:
+            kbd.send(Keycode.J)
     else:
         dock6keys.set_led(5, (0, 0, 0))
-    print(pressed)
+
+re_led = re.compile(r'led ([0-9]*) ([0-9]*) ([0-9]*)')
+
+def command_input():
+    global host_managed_mode
+
+    if(usb_cdc.console.in_waiting == 0):
+        return
+
+    line = usb_cdc.console.readline()
+    line = line.decode().replace('\n', '')
+
+    if(line == 'host_manage'):
+        host_managed_mode = True
+        print('Entered to host-managed mode')
+    elif(line == 'device_manage'):
+        host_managed_mode = False
+        print('Leave from host-managed mode')
+    else:
+        if host_managed_mode:
+            match = re_led.match(line)
+            if match:
+                color = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+                # print(f'{int(match.group(1))}, {int(match.group(2))}, {int(match.group(3))}')
+                set_led_color(color)
 
 if __name__ == "__main__":
     i2c = busio.I2C(PIN_I2C_SCL, PIN_I2C_SDA, frequency=100000)
@@ -377,9 +440,12 @@ if __name__ == "__main__":
     
     center_button = Button(center_push, on_center_short_press, on_center_long_press)
     side_button = Button(side_push, on_side_short_press, on_side_long_press)
-    
+
+    # 外部モジュール向けインターフェースの設定
+    btms['kbd'] = kbd
+
     # オンラインアプリケーションの初期化
-    appcontrol = ApplicationControl()
+    layers = Layer()
     
     # 6Keys Dockの初期化
     dock6keys = Dock6Keys(on_dock6_key1_press, on_dock6_key2_press, on_dock6_key3_press, on_dock6_key4_press, on_dock6_key5_press, on_dock6_key6_press)
@@ -388,11 +454,16 @@ if __name__ == "__main__":
     led = NeoPixel(PIN_NEOPIXEL, 1, brightness=1.0)
     led_indicate(LED_INDICATOR_TOGGLE_MUTE_MODE)
     
+    usb_cdc.console.timeout = 0.8
+
+
     while True:
         manage_knob()
         manage_led()
         manage_dock()
         center_button.poll()
         side_button.poll()
+        command_input()
         if (attached_dock_type == DOCK_6KEYS):
             dock6keys.poll()
+        
