@@ -1,22 +1,21 @@
 #
-# Layer for LINE
+# Layer for webex
 #
 
 from adafruit_hid.keycode import Keycode
 
-class line:
+class webex:
     color = 0x00ff00
-    target = 'LINE'
+    target = 'webex'
     btms = None
 
     def __init__(self, btms):
         self.btms = btms
     
     def toggle_mute(self) -> None:
-        print('LINE toggle mute')
+        print('webex toggle mute')
         self.btms['kbd'].press(Keycode.LEFT_CONTROL)
-        self.btms['kbd'].press(Keycode.LEFT_SHIFT)
-        self.btms['kbd'].press(Keycode.A)
+        self.btms['kbd'].press(Keycode.M)
         self.btms['kbd'].release_all()
 
     def mute(self) -> None:
@@ -26,4 +25,7 @@ class line:
         self.toggle_mute()
 
     def leave(self) -> None:
-        print('Leave from LINE')
+        print('Leave from webex meeting')
+        self.btms['kbd'].press(Keycode.LEFT_CONTROL)
+        self.btms['kbd'].press(Keycode.L)
+        self.btms['kbd'].release_all()
