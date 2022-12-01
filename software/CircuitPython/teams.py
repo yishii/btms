@@ -5,7 +5,7 @@
 from adafruit_hid.keycode import Keycode
 
 class teams:
-    color = 0x0000ff
+    color = 0x3000ff
     target = 'Teams'
     btms = None
 

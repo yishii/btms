@@ -5,7 +5,7 @@
 from adafruit_hid.keycode import Keycode
 
 class webex:
-    color = 0x00ff00
+    color = 0xff0000
     target = 'webex'
     btms = None
 

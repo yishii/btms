@@ -5,7 +5,7 @@
 from adafruit_hid.keycode import Keycode
 
 class zoom:
-    color = 0x00ffff
+    color = 0x0095ff
     target = 'Zoom'
     btms = None
 
